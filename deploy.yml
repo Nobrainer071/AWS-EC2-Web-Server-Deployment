@@ -1,0 +1,29 @@
+# Optional CI/CD: on push to main, SSH into the running EC2 instance,
+# pull the latest code, and restart the service.
+#
+# To enable:
+#   1. Add repo secrets: EC2_HOST (public IP/DNS), EC2_SSH_KEY (private key contents)
+#   2. Uncomment the "on:" trigger below
+
+name: Deploy to EC2
+
+on:
+  workflow_dispatch: {}
+  # push:
+  #   branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /opt/flask-s3-app
+            git pull origin main
+            pip3 install -r app/requirements.txt
+            sudo systemctl restart flask-s3-app

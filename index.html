@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EC2 + Flask + S3 Demo</title>
+  <style>
+    body { font-family: -apple-system, Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+    h1 { font-size: 1.4rem; }
+    .bucket { color: #666; font-size: 0.9rem; margin-bottom: 24px; }
+    .flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; }
+    .flash.success { background: #e6f4ea; color: #1e7e34; }
+    .flash.error { background: #fdecea; color: #b3261e; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    form.upload { display: flex; gap: 10px; margin-top: 20px; }
+    button { background: #1a1a1a; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>EC2 + Flask + S3 Demo</h1>
+  <div class="bucket">Bucket: {{ bucket or "not configured" }}</div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if error %}
+    <div class="flash error">{{ error }}</div>
+  {% endif %}
+
+  <form class="upload" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" required>
+    <button type="submit">Upload to S3</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr><th>File</th><th>Size (KB)</th><th>Last modified</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for f in files %}
+      <tr>
+        <td>{{ f.key }}</td>
+        <td>{{ f.size_kb }}</td>
+        <td>{{ f.last_modified }}</td>
+        <td><a href="{{ url_for('download', key=f.key) }}">Download</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">No files yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
